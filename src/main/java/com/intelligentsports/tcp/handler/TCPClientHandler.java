@@ -1,7 +1,10 @@
 package com.intelligentsports.tcp.handler;
 
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.json.JSON;
+import cn.hutool.json.JSONObject;
 import com.google.gson.Gson;
+import com.intelligentsports.tcp.domain.Base;
 import com.intelligentsports.tcp.domain.HealthMetrics;
 import com.intelligentsports.tcp.service.HealthMetricsService;
 import io.netty.channel.ChannelHandlerContext;
@@ -22,6 +25,7 @@ public class TCPClientHandler extends SimpleChannelInboundHandler<String> {
     private HealthMetricsService healthMetricsService;
     // 登录请求
     private static final String LOGIN_REQUEST = "{\"type\":\"LOGIN\",\"name\":\"fjqm\",\"password\":\"fjqmProd@2024\"}";
+    private final Gson gson = new Gson();
 
     public TCPClientHandler(HealthMetricsService healthMetricsService) {
         this.healthMetricsService = healthMetricsService;
@@ -43,17 +47,16 @@ public class TCPClientHandler extends SimpleChannelInboundHandler<String> {
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, String msg) {
         // 记录接收到的TCP服务器消息。
-        Gson gson = new Gson();
-        try{
-            HealthMetrics[] healthMetrics = gson.fromJson(msg, HealthMetrics[].class);
-            List<HealthMetrics> list = Arrays.asList(healthMetrics);
-            HealthMetrics healthMetrics1 = list.get(0);
-            log.info("开始获取实时数据");
-            if(!ObjectUtil.isEmpty(healthMetrics1.getUuid())){
+        log.info("接收到消息: {}", msg);
+        try {
+            HealthMetrics[] jsonObject = gson.fromJson(msg, HealthMetrics[].class);
+            List<HealthMetrics> jsonObjectList = Arrays.asList(jsonObject);
+            if (ObjectUtil.isNotNull(jsonObjectList.get(0).getUuid())) {
+                log.info("开始获取实时数据");
                 healthMetricsService.insert(msg);
             }
-        }catch (Exception e){
-            log.info("解析数据失败");
+        } catch (Exception e) {
+            log.error("解析数据失败", e);
         }
 
     }
@@ -62,7 +65,7 @@ public class TCPClientHandler extends SimpleChannelInboundHandler<String> {
      * 当发生异常时执行此方法。
      * 此方法重写了ChannelInboundHandlerAdapter的exceptionCaught方法，用于处理通道操作过程中发生的异常。
      *
-     * @param ctx 通道上下文，用于通道的管理和操作。
+     * @param ctx   通道上下文，用于通道的管理和操作。
      * @param cause 异常原因，记录并关闭通道。
      */
     @Override

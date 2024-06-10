@@ -16,7 +16,6 @@
 
     <description>intelligentsports-tcp</description>
     <properties>
-        <java.version>17</java.version>
         <mapstruct-plus.version>1.3.5</mapstruct-plus.version>
         <mybatis-plus.version>3.5.5</mybatis-plus.version>
     </properties>
