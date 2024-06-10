@@ -44,13 +44,18 @@ public class TCPClientHandler extends SimpleChannelInboundHandler<String> {
     protected void channelRead0(ChannelHandlerContext ctx, String msg) {
         // 记录接收到的TCP服务器消息。
         Gson gson = new Gson();
-        HealthMetrics[] healthMetrics = gson.fromJson(msg, HealthMetrics[].class);
-        List<HealthMetrics> list = Arrays.asList(healthMetrics);
-        HealthMetrics healthMetrics1 = list.get(0);
-        log.info("开始获取实时数据");
-        if(!ObjectUtil.isEmpty(healthMetrics1.getUuid())){
-            healthMetricsService.insert(msg);
+        try{
+            HealthMetrics[] healthMetrics = gson.fromJson(msg, HealthMetrics[].class);
+            List<HealthMetrics> list = Arrays.asList(healthMetrics);
+            HealthMetrics healthMetrics1 = list.get(0);
+            log.info("开始获取实时数据");
+            if(!ObjectUtil.isEmpty(healthMetrics1.getUuid())){
+                healthMetricsService.insert(msg);
+            }
+        }catch (Exception e){
+            log.info("解析数据失败");
         }
+
     }
 
     /**
@@ -64,6 +69,6 @@ public class TCPClientHandler extends SimpleChannelInboundHandler<String> {
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         // 记录发生的异常并关闭通道。
         log.error("TCPClient Error", cause);
-        ctx.close();
+//        ctx.close();
     }
 }
